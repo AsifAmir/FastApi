@@ -40,10 +40,14 @@ def get_posts():
 
 @app.post("/createposts")
 def create_posts(payload: Post): # Using Pydantic model to validate the incoming data
-    # print(payload)
-    print(f'Course Code: {payload.Course_Code}, Course Title: {payload.Course_Title}, Course Credits: {payload.Course_Credits}')
-    print(f'Enrolled: {payload.Enrolled}')
+    print(payload)
+    payload_dict = payload.dict() # Convert the Pydantic model to a dictionary
+    print(payload_dict)
+
+    # print(f'Course Code: {payload.Course_Code}, Course Title: {payload.Course_Title}, Course Credits: {payload.Course_Credits}')
+    # print(f'Enrolled: {payload.Enrolled}')
     # return {"data": "This is your posts"}
     # return{f'Course Code: {payload.Course_Code}, Course Title: {payload.Course_Title}, Course Credits: {payload.Course_Credits}, Enrolled: {payload.Enrolled}'}
     # return{f'Enrolled: {payload.Enrolled}'}
-    return{f'Course Title: {payload.Course_Title}'}
+    # return{f'Course Title: {payload.Course_Title}'}
+    return{"data": payload_dict}
