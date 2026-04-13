@@ -14,9 +14,16 @@ venv\Scripts\activate.bat
 # 3. Install FastAPI and all optional dependencies
 pip install fastapi[all]
 
-#save installed packages to requirements.txt
+# 4.save installed packages to requirements.txt
 pip freeze > requirements.txt
 
 
 # 5. Verify the installed packages
 pip list
+
+# 6. Run the application
+# Standard Dev Mode (Recommended):
+fastapi dev
+
+# Manual Uvicorn Mode:
+# uvicorn main:app --reload
