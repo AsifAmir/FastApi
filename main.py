@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import Body, FastAPI
 from pydantic import BaseModel
 
@@ -5,7 +7,7 @@ app = FastAPI()
 
 class Post(BaseModel):
     Course_Code: str
-    Course_Title: str
+    Course_Title: Optional[str] = None
     Course_Credits: int
     Enrolled: bool = True
 
@@ -43,4 +45,5 @@ def create_posts(payload: Post): # Using Pydantic model to validate the incoming
     print(f'Enrolled: {payload.Enrolled}')
     # return {"data": "This is your posts"}
     # return{f'Course Code: {payload.Course_Code}, Course Title: {payload.Course_Title}, Course Credits: {payload.Course_Credits}, Enrolled: {payload.Enrolled}'}
-    return{f'Enrolled: {payload.Enrolled}'}
+    # return{f'Enrolled: {payload.Enrolled}'}
+    return{f'Course Title: {payload.Course_Title}'}
