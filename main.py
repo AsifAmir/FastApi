@@ -62,3 +62,11 @@ def create_posts(post: Post):
     conn.commit()
     print(new_post)
     return({"data": new_post})
+
+@app.get("/posts/{id}")
+def get_post(id: int):
+    cursor.execute("SELECT * FROM posts WHERE id = %s", (str(id),))
+    post = cursor.fetchone()
+    if not post:
+        return {"message": f"post with id: {id} was not found"}
+    return {"post_detail": post}
