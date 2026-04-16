@@ -1,10 +1,11 @@
 import os
 from time import sleep
 from typing import Optional
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status, HTTPException
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
+# from http.client import HTTPException
 from dotenv import load_dotenv
 # Load variables from .env into the environment
 load_dotenv()
@@ -63,10 +64,21 @@ def create_posts(post: Post):
     print(new_post)
     return({"data": new_post})
 
+
 @app.get("/posts/{id}")
 def get_post(id: int):
     cursor.execute("SELECT * FROM posts WHERE id = %s", (str(id),))
     post = cursor.fetchone()
     if not post:
-        return {"message": f"post with id: {id} was not found"}
-    return {"post_detail": post}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
+    return {"data": post}
+
+
+@app.delete("/posts/{id}")
+def delete_post(id: int):
+    cursor.execute("DELETE FROM posts WHERE id = %s RETURNING *", (str(id),))
+    deleted_post = cursor.fetchone()
+    conn.commit()
+    if not deleted_post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} does not exist")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
