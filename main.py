@@ -1,17 +1,36 @@
 import os
+from dotenv import load_dotenv
 from time import sleep
 from typing import Optional
-from fastapi import FastAPI, Response, status, HTTPException
+from fastapi import FastAPI, Response, status, HTTPException, Depends
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
-# from http.client import HTTPException
-from dotenv import load_dotenv
+
+
+# Importing the database connection and models for SQLAlchemy
+from sqlalchemy.orm import Session
+import models
+from database import engine, SessionLocal, Base
+
+# Create the tables in the database based on the models defined in models.py
+models.Base.metadata.create_all(bind=engine) 
+
 # Load variables from .env into the environment
 load_dotenv()
 
 app = FastAPI()
 
+# Dependency to get a database session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+# Connecting to the database
 while True:
     try:
         conn = psycopg2.connect(
@@ -30,6 +49,7 @@ while True:
         sleep(2)
 
 
+#============= Extra Notes =============
 # decorator -> @app.get("/") -> HTTP method + path
 # path operation function -> root() -> function that is executed when the path is accessed
 
@@ -93,3 +113,12 @@ def update_post(id: int, post: Post):
     if not updated_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} does not exist")
     return {"data": updated_post}
+
+
+#============= ORM Notes =============
+# Object Relational Mapper (ORM) -> SQLAlchemy, Tortoise, Django ORM
+# ORMs allow us to interact with the database using Python code instead of writing raw SQL queries. They provide an abstraction layer that simplifies database operations and can help prevent SQL injection attacks.
+
+@app.get("/sqlalchemy")
+def test_posts(db: Session = Depends(get_db)):
+    return {"status": "success"}
