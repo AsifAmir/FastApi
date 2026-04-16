@@ -1,8 +1,7 @@
 import os
 from time import sleep
 from typing import Optional
-from random import randrange
-from fastapi import Body, FastAPI
+from fastapi import FastAPI
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -44,5 +43,22 @@ def root():
 def get_posts():
     cursor.execute("SELECT * FROM posts")
     data = cursor.fetchall()
-    return(data)
+    print(data)
+    return({"data": data})
 
+
+class Post(BaseModel):
+    title: str
+    content: str
+    published: Optional[bool] = True
+
+
+@app.post("/posts")
+def create_posts(post: Post):
+    cursor.execute("INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *",
+                   (post.title, post.content, post.published))
+    
+    new_post = cursor.fetchone()
+    conn.commit()
+    print(new_post)
+    return({"data": new_post})
