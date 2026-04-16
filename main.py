@@ -11,7 +11,7 @@ from psycopg2.extras import RealDictCursor
 # Importing the database connection and models for SQLAlchemy
 from sqlalchemy.orm import Session
 import models
-from database import engine, SessionLocal, Base
+from database import engine, get_db
 
 # Create the tables in the database based on the models defined in models.py
 models.Base.metadata.create_all(bind=engine) 
@@ -20,14 +20,6 @@ models.Base.metadata.create_all(bind=engine)
 load_dotenv()
 
 app = FastAPI()
-
-# Dependency to get a database session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 # Connecting to the database
