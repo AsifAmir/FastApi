@@ -28,7 +28,8 @@ class PostResponse(PostBase):
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    
+
+# This model is used for the response when a user is created. It includes the id, email, and created_at fields, but excludes the password for security reasons.    
 class UserCreateResponse(BaseModel):
     id: int
     email: EmailStr
