@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
 class PostBase(BaseModel): # Pydantic model
@@ -22,5 +22,17 @@ class PostResponse(PostBase):
     created_at: datetime
 
     # This tells Pydantic to work with ORM objects, allowing us to return SQLAlchemy models directly from our path operations without needing to convert them to dictionaries first.
+    class Config:
+        from_attributes = True
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    
+class UserCreateResponse(BaseModel):
+    id: int
+    email: EmailStr
+    created_at: datetime
+
     class Config:
         from_attributes = True

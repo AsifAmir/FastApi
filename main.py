@@ -162,3 +162,14 @@ def update_post_by_id(id: int, post: schemas.PostUpdate, db: Session = Depends(g
     db.commit()
     #return {"data": post_query.first()}
     return post_query.first()
+
+# create user
+@app.post("/orm/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserCreateResponse)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    new_user = models.User(**user.dict())
+    db.add(new_user)
+    db.commit()
+    if not new_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User could not be created")
+    db.refresh(new_user)
+    return new_user
