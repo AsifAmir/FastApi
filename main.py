@@ -4,7 +4,7 @@ from time import sleep
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 import psycopg2
 from psycopg2.extras import RealDictCursor
-
+from typing import List
 
 # Importing the database connection and models for SQLAlchemy
 from sqlalchemy.orm import Session
@@ -58,8 +58,8 @@ def get_posts():
     return({"data": data})
 
 
-@app.post("/posts")
-def create_posts(post: schemas.PostCreate, status_code=status.HTTP_201_CREATED):
+@app.post("/posts", status_code=status.HTTP_201_CREATED)
+def create_posts(post: schemas.PostCreate):
     cursor.execute("INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *",
                    (post.title, post.content, post.published))
     
@@ -71,7 +71,7 @@ def create_posts(post: schemas.PostCreate, status_code=status.HTTP_201_CREATED):
     return({"data": new_post})
 
 
-@app.get("/posts/{id}")
+@app.get("/posts/{id}", status_code=status.HTTP_200_OK)
 def get_post(id: int):
     cursor.execute("SELECT * FROM posts WHERE id = %s", (str(id),))
     post = cursor.fetchone()
@@ -80,7 +80,7 @@ def get_post(id: int):
     return {"data": post}
 
 
-@app.delete("/posts/{id}")
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
     cursor.execute("DELETE FROM posts WHERE id = %s RETURNING *", (str(id),))
     deleted_post = cursor.fetchone()
@@ -90,7 +90,7 @@ def delete_post(id: int):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.put("/posts/{id}")
+@app.put("/posts/{id}", status_code=status.HTTP_200_OK)
 def update_post(id: int, post: schemas.PostUpdate):
     cursor.execute("UPDATE posts SET title = %s, content = %s WHERE id = %s RETURNING *",
                    (post.title, post.content, str(id)))
@@ -109,15 +109,18 @@ def update_post(id: int, post: schemas.PostUpdate):
 def test_posts(db: Session = Depends(get_db)):
     return {"status": "success"}
 
-@app.get("/orm/posts")
+# get all posts
+@app.get("/orm/posts", status_code=status.HTTP_200_OK, response_model=List[schemas.PostResponse])
 def get_all_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
     print(posts)
     if not posts:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No posts found")
-    return {"data": posts}
+    #return {"data": posts}
+    return posts # FastAPI will automatically convert the SQLAlchemy models to JSON serializable format
 
-@app.post("/orm/posts")
+# create new post
+@app.post("/orm/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
 def create_new_posts(post: schemas.PostCreate, db: Session = Depends(get_db)):
     # new_post = models.Post(title=post.title, content=post.content, published=post.published)
     new_post = models.Post(**post.dict()) # Unpacking the post object into the Post model.. effectively the same as the line above..
@@ -126,25 +129,30 @@ def create_new_posts(post: schemas.PostCreate, db: Session = Depends(get_db)):
     if not new_post:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Post could not be created")
     db.refresh(new_post) # Refresh the instance to get the generated ID and other fields
-    return {"data": new_post}
+    #return {"data": new_post}
+    return new_post
 
-@app.get("/orm/posts/{id}")
+# get post by id
+@app.get("/orm/posts/{id}", status_code=status.HTTP_200_OK, response_model=schemas.PostResponse)
 def get_post_by_id(id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} was not found")
-    return {"data": post}
+    #return {"data": post}
+    return post
 
-@app.delete("/orm/posts/{id}")
+# delete post by id
+@app.delete("/orm/posts/{id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
 def delete_post_by_id(id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} does not exist")
     db.delete(post)
     db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT, content=f"Post with id: {id} has been deleted")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-@app.put("/orm/posts/{id}")
+# update post by id
+@app.put("/orm/posts/{id}", status_code=status.HTTP_200_OK, response_model=schemas.PostResponse)
 def update_post_by_id(id: int, post: schemas.PostUpdate, db: Session = Depends(get_db)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     updated_post = post_query.first()
@@ -152,4 +160,5 @@ def update_post_by_id(id: int, post: schemas.PostUpdate, db: Session = Depends(g
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} does not exist")
     post_query.update(post.dict(), synchronize_session=False)
     db.commit()
-    return {"data": post_query.first()}
+    #return {"data": post_query.first()}
+    return post_query.first()
