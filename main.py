@@ -1,16 +1,14 @@
 import os
 from dotenv import load_dotenv
 from time import sleep
-from typing import Optional
 from fastapi import FastAPI, Response, status, HTTPException, Depends
-from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 
 # Importing the database connection and models for SQLAlchemy
 from sqlalchemy.orm import Session
-import models
+import models, schemas
 from database import engine, get_db
 
 # Create the tables in the database based on the models defined in models.py
@@ -60,14 +58,8 @@ def get_posts():
     return({"data": data})
 
 
-class Post(BaseModel): # Pydantic model
-    title: str
-    content: str
-    published: Optional[bool] = True
-
-
 @app.post("/posts")
-def create_posts(post: Post, status_code=status.HTTP_201_CREATED):
+def create_posts(post: schemas.PostCreate, status_code=status.HTTP_201_CREATED):
     cursor.execute("INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *",
                    (post.title, post.content, post.published))
     
@@ -99,9 +91,9 @@ def delete_post(id: int):
 
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post):
-    cursor.execute("UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *",
-                   (post.title, post.content, post.published, str(id)))
+def update_post(id: int, post: schemas.PostUpdate):
+    cursor.execute("UPDATE posts SET title = %s, content = %s WHERE id = %s RETURNING *",
+                   (post.title, post.content, str(id)))
     updated_post = cursor.fetchone()
     conn.commit()
     if not updated_post:
@@ -126,7 +118,7 @@ def get_all_posts(db: Session = Depends(get_db)):
     return {"data": posts}
 
 @app.post("/orm/posts")
-def create_new_posts(post: Post, db: Session = Depends(get_db)):
+def create_new_posts(post: schemas.PostCreate, db: Session = Depends(get_db)):
     # new_post = models.Post(title=post.title, content=post.content, published=post.published)
     new_post = models.Post(**post.dict()) # Unpacking the post object into the Post model.. effectively the same as the line above..
     db.add(new_post)
@@ -153,7 +145,7 @@ def delete_post_by_id(id: int, db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT, content=f"Post with id: {id} has been deleted")
 
 @app.put("/orm/posts/{id}")
-def update_post_by_id(id: int, post: Post, db: Session = Depends(get_db)):
+def update_post_by_id(id: int, post: schemas.PostUpdate, db: Session = Depends(get_db)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     updated_post = post_query.first()
     if not updated_post:
