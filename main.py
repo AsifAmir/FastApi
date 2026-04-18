@@ -8,7 +8,7 @@ from typing import List
 
 # Importing the database connection and models for SQLAlchemy
 from sqlalchemy.orm import Session
-import models, schemas
+import models, schemas, utils
 from database import engine, get_db
 
 # Create the tables in the database based on the models defined in models.py
@@ -50,7 +50,7 @@ def root():
     return {"message": "Hello World"}
 
 
-@app.get("/posts")
+@app.get("/test/posts")
 def get_posts():
     cursor.execute("SELECT * FROM posts")
     data = cursor.fetchall()
@@ -58,7 +58,7 @@ def get_posts():
     return({"data": data})
 
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
+@app.post("/test/posts", status_code=status.HTTP_201_CREATED)
 def create_posts(post: schemas.PostCreate):
     cursor.execute("INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *",
                    (post.title, post.content, post.published))
@@ -71,7 +71,7 @@ def create_posts(post: schemas.PostCreate):
     return({"data": new_post})
 
 
-@app.get("/posts/{id}", status_code=status.HTTP_200_OK)
+@app.get("/test/posts/{id}", status_code=status.HTTP_200_OK)
 def get_post(id: int):
     cursor.execute("SELECT * FROM posts WHERE id = %s", (str(id),))
     post = cursor.fetchone()
@@ -80,7 +80,7 @@ def get_post(id: int):
     return {"data": post}
 
 
-@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/test/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
     cursor.execute("DELETE FROM posts WHERE id = %s RETURNING *", (str(id),))
     deleted_post = cursor.fetchone()
@@ -90,7 +90,7 @@ def delete_post(id: int):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.put("/posts/{id}", status_code=status.HTTP_200_OK)
+@app.put("/test/posts/{id}", status_code=status.HTTP_200_OK)
 def update_post(id: int, post: schemas.PostUpdate):
     cursor.execute("UPDATE posts SET title = %s, content = %s WHERE id = %s RETURNING *",
                    (post.title, post.content, str(id)))
@@ -110,7 +110,7 @@ def test_posts(db: Session = Depends(get_db)):
     return {"status": "success"}
 
 # get all posts
-@app.get("/orm/posts", status_code=status.HTTP_200_OK, response_model=List[schemas.PostResponse])
+@app.get("/posts", status_code=status.HTTP_200_OK, response_model=List[schemas.PostResponse])
 def get_all_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
     print(posts)
@@ -120,10 +120,10 @@ def get_all_posts(db: Session = Depends(get_db)):
     return posts # FastAPI will automatically convert the SQLAlchemy models to JSON serializable format
 
 # create new post
-@app.post("/orm/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
 def create_new_posts(post: schemas.PostCreate, db: Session = Depends(get_db)):
     # new_post = models.Post(title=post.title, content=post.content, published=post.published)
-    new_post = models.Post(**post.dict()) # Unpacking the post object into the Post model.. effectively the same as the line above..
+    new_post = models.Post(**post.model_dump()) # Unpacking the post object into the Post model.. effectively the same as the line above..
     db.add(new_post)
     db.commit()
     if not new_post:
@@ -133,7 +133,7 @@ def create_new_posts(post: schemas.PostCreate, db: Session = Depends(get_db)):
     return new_post
 
 # get post by id
-@app.get("/orm/posts/{id}", status_code=status.HTTP_200_OK, response_model=schemas.PostResponse)
+@app.get("/posts/{id}", status_code=status.HTTP_200_OK, response_model=schemas.PostResponse)
 def get_post_by_id(id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
@@ -142,7 +142,7 @@ def get_post_by_id(id: int, db: Session = Depends(get_db)):
     return post
 
 # delete post by id
-@app.delete("/orm/posts/{id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
 def delete_post_by_id(id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
@@ -152,21 +152,22 @@ def delete_post_by_id(id: int, db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 # update post by id
-@app.put("/orm/posts/{id}", status_code=status.HTTP_200_OK, response_model=schemas.PostResponse)
+@app.put("/posts/{id}", status_code=status.HTTP_200_OK, response_model=schemas.PostResponse)
 def update_post_by_id(id: int, post: schemas.PostUpdate, db: Session = Depends(get_db)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     updated_post = post_query.first()
     if not updated_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} does not exist")
-    post_query.update(post.dict(), synchronize_session=False)
+    post_query.update(post.model_dump(), synchronize_session=False)
     db.commit()
     #return {"data": post_query.first()}
     return post_query.first()
 
 # create user
-@app.post("/orm/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserCreateResponse)
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserCreateResponse)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    new_user = models.User(**user.dict())
+    user.password = utils.hash_password(user.password) # Hash the password before storing it in the database
+    new_user = models.User(**user.model_dump())
     db.add(new_user)
     db.commit()
     if not new_user:

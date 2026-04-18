@@ -36,3 +36,6 @@ pip install python-dotenv
 
 # install ORM
 pip install SQLAlchemy
+
+# install password hashing library
+pip install "pwdlib[argon2]"
