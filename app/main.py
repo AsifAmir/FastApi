@@ -104,5 +104,14 @@ def update_post(id: int, post: schemas.PostUpdate):
     return {"data": updated_post}
 
 
+#============= ORM Notes =============
+# Object Relational Mapper (ORM) -> SQLAlchemy, Tortoise, Django ORM
+# ORMs allow us to interact with the database using Python code instead of writing raw SQL queries. They provide an abstraction layer that simplifies database operations and can help prevent SQL injection attacks.
+
+@app.get("/orm")
+def test_posts(db: Session = Depends(get_db)):
+    return {"status": "success"}
+
+# routes for posts and users are defined in separate files in the routers directory. 
 app.include_router(posts.router)
 app.include_router(users.router)
