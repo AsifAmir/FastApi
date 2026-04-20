@@ -41,3 +41,11 @@ class UserCreateResponse(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+# Token models for authentication
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    id: Optional[str] = None
