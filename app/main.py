@@ -4,14 +4,13 @@ from time import sleep
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from typing import List
 
 # Importing the routers for the API
-from routers import posts, users
+from routers import posts, users, auth
 
 # Importing the database connection and models for SQLAlchemy
 from sqlalchemy.orm import Session
-import models, schemas, utils
+import models, schemas
 from database import engine, get_db
 
 # Create the tables in the database based on the models defined in models.py
@@ -115,3 +114,4 @@ def test_posts(db: Session = Depends(get_db)):
 # routes for posts and users are defined in separate files in the routers directory. 
 app.include_router(posts.router)
 app.include_router(users.router)
+app.include_router(auth.router)

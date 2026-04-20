@@ -10,8 +10,6 @@ router = APIRouter(
 )
 
 
-
-
 # get all posts
 @router.get("/", status_code=status.HTTP_200_OK, response_model=List[schemas.PostResponse])
 def get_all_posts(db: Session = Depends(get_db)):
