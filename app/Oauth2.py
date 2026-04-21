@@ -34,7 +34,7 @@ def verify_access_token(token: str, credentials_exception):
         id: str = payload.get("user_id") # type: ignore
         if id is None:
             raise credentials_exception
-        token_data = schemas.TokenData(id=id)
+        token_data = schemas.TokenData(id=id) # type: ignore
     except jwt.PyJWTError:
         raise credentials_exception
     return token_data

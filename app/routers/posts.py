@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
-import models, schemas
+import models, schemas, Oauth2
 from database import get_db
 
 router = APIRouter(
@@ -12,7 +12,7 @@ router = APIRouter(
 
 # get all posts
 @router.get("/", status_code=status.HTTP_200_OK, response_model=List[schemas.PostResponse])
-def get_all_posts(db: Session = Depends(get_db)):
+def get_all_posts(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
     posts = db.query(models.Post).all()
     print(posts)
     if not posts:
@@ -22,8 +22,9 @@ def get_all_posts(db: Session = Depends(get_db)):
 
 # create new post
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
-def create_new_posts(post: schemas.PostCreate, db: Session = Depends(get_db)):
+def create_new_posts(post: schemas.PostCreate, db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
     # new_post = models.Post(title=post.title, content=post.content, published=post.published)
+    print(current_user)
     new_post = models.Post(**post.model_dump()) # Unpacking the post object into the Post model.. effectively the same as the line above..
     db.add(new_post)
     db.commit()
@@ -35,7 +36,7 @@ def create_new_posts(post: schemas.PostCreate, db: Session = Depends(get_db)):
 
 # get post by id
 @router.get("/{id}", status_code=status.HTTP_200_OK, response_model=schemas.PostResponse)
-def get_post_by_id(id: int, db: Session = Depends(get_db)):
+def get_post_by_id(id: int, db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} was not found")
@@ -44,7 +45,7 @@ def get_post_by_id(id: int, db: Session = Depends(get_db)):
 
 # delete post by id
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
-def delete_post_by_id(id: int, db: Session = Depends(get_db)):
+def delete_post_by_id(id: int, db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} does not exist")
@@ -54,7 +55,7 @@ def delete_post_by_id(id: int, db: Session = Depends(get_db)):
 
 # update post by id
 @router.put("/{id}", status_code=status.HTTP_200_OK, response_model=schemas.PostResponse)
-def update_post_by_id(id: int, post: schemas.PostUpdate, db: Session = Depends(get_db)):
+def update_post_by_id(id: int, post: schemas.PostUpdate, db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     updated_post = post_query.first()
     if not updated_post:
