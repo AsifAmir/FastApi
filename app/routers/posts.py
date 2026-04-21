@@ -14,7 +14,7 @@ router = APIRouter(
 @router.get("/", status_code=status.HTTP_200_OK, response_model=List[schemas.PostResponse])
 def get_all_posts(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
     posts = db.query(models.Post).all()
-    print(posts)
+    # print(posts)
     if not posts:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No posts found")
     #return {"data": posts}
