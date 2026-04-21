@@ -10,7 +10,7 @@ load_dotenv()
 
 secret_key = os.getenv("SECRET_KEY")
 algorithm = os.getenv("ALGORITHM")
-token_expire_minutes = os.getenv("TOKEN_EXPIRE_MINUTES", "30")
+token_expire_minutes = os.getenv("TOKEN_EXPIRE_MINUTES")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -30,11 +30,25 @@ def verify_access_token(token: str, credentials_exception):
     try:
         # Decode the token using the secret key and algorithm
         payload = jwt.decode(token, secret_key, algorithms=[algorithm]) # type: ignore
+
+        # Extract and print expiration for debugging
+        # exp_timestamp = payload.get("exp")
+        # if exp_timestamp:
+        #     # Convert timestamp to human-readable format (Local Time)
+        #     readable_exp = datetime.fromtimestamp(exp_timestamp)
+        #     current_time = datetime.now()
+            
+        #     print("--- TOKEN CHECK ---")
+        #     print(f"Current Time: {current_time.strftime('%H:%M:%S')}")
+        #     print(f"Token Exp:    {readable_exp.strftime('%H:%M:%S')}")
+        #     print("-------------------")
+
+
         # Extract the user ID from the token payload
         id: str = payload.get("user_id") # type: ignore
         if id is None:
             raise credentials_exception
-        token_data = schemas.TokenData(id=id) # type: ignore
+        token_data = schemas.TokenData(id=int(id))
     except jwt.PyJWTError:
         raise credentials_exception
     return token_data
