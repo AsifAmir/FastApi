@@ -12,13 +12,16 @@ router = APIRouter(
 
 # get all posts
 @router.get("/", status_code=status.HTTP_200_OK, response_model=List[schemas.PostResponse])
-def get_all_posts(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
+def get_all_posts(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user), limit: int = 10):
     
     # To get only the posts created by the currently authenticated user.
     # posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all() # type: ignore
     
     # To get all posts regardless of the owner.
-    posts = db.query(models.Post).all()
+    # posts = db.query(models.Post).all()
+
+    # To get all posts with a limit on the number of posts returned.
+    posts = db.query(models.Post).limit(limit).all()
     
     # print(posts)
     if not posts:
