@@ -1,9 +1,10 @@
 import os
 import jwt
-import schemas
+import schemas, database, models
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -53,10 +54,23 @@ def verify_access_token(token: str, credentials_exception):
         raise credentials_exception
     return token_data
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    return verify_access_token(token, credentials_exception)
+
+    # Verify the token and extract the user ID
+    token = verify_access_token(token, credentials_exception)
+    
+    # Fetch the actual user from the DB
+    user = db.query(models.User).filter(models.User.id == token.id).first()
+    
+    # Safety Check: What if the user no longer exists in the DB?
+    if user is None:
+        raise credentials_exception
+    
+    # Return the user
+    print(f"Current User: {user.email}") # Debugging statement to check the current user
+    return user
