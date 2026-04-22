@@ -6,10 +6,8 @@ from time import sleep
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-# environment variable management
-import os
-from dotenv import load_dotenv
-load_dotenv()
+# importing the settings from the config module to access environment variables
+from config import settings
 
 # =======================================================================================================
 # Connecting to the database using psycopg2(PostgreSQL driver) for raw SQL queries (not using SQLAlchemy ORM)
@@ -17,10 +15,10 @@ load_dotenv()
 while True:
     try:
         conn = psycopg2.connect(
-            host=os.getenv('DB_HOST'),
-            database=os.getenv('DB_NAME'),
-            user=os.getenv('DB_USER'),
-            password=os.getenv('DB_PASSWORD'),
+            host=settings.DB_HOST,
+            database=settings.DB_NAME,
+            user=settings.DB_USER,
+            password=settings.DB_PASSWORD,
             cursor_factory=RealDictCursor
         )
         cursor = conn.cursor()
@@ -36,7 +34,8 @@ while True:
 # connecting to the database using SQLAlchemy ORM
 # =======================================================================================================
 # Get the database URL from environment variables
-DATABASE_URL = os.getenv("DATABASE_URL")
+# DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = f"postgresql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
 
 if DATABASE_URL is None:
     raise ValueError("DATABASE_URL not found in environment variables. Check your .env file!")
