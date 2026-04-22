@@ -1,51 +1,22 @@
-import os
-from dotenv import load_dotenv
-from time import sleep
 from fastapi import FastAPI, Response, status, HTTPException, Depends
-import psycopg2
-from psycopg2.extras import RealDictCursor
-
 # Importing the routers for the API
 from routers import posts, users, auth
-
 # Importing the database connection and models for SQLAlchemy
 from sqlalchemy.orm import Session
 import models, schemas
-from database import engine, get_db
+from database import engine, get_db, cursor, conn
 
 # Create the tables in the database based on the models defined in models.py
 models.Base.metadata.create_all(bind=engine) 
 
-# Load variables from .env into the environment
-load_dotenv()
-
 app = FastAPI()
 
+# ============= psycopg2 =============
+# Raw sQL queries using psycopg2 adapter for PostgreSQL database connection.
+# ====================================
 
-# Connecting to the database
-while True:
-    try:
-        conn = psycopg2.connect(
-            host=os.getenv('DB_HOST'),
-            database=os.getenv('DB_NAME'),
-            user=os.getenv('DB_USER'),
-            password=os.getenv('DB_PASSWORD'),
-            cursor_factory=RealDictCursor
-        )
-        cursor = conn.cursor()
-        print("Database connection was successful")
-        break
-    except Exception as error:
-        print("Connecting to database failed")
-        print("Error: ", error)
-        sleep(2)
-
-
-#============= Extra Notes =============
-# decorator -> @app.get("/") -> HTTP method + path
-# path operation function -> root() -> function that is executed when the path is accessed
-
-# 1. The Decorator
+# 1. The Decorator -> @app.get("/") -> HTTP method + path
+# 2. path operation function -> root() -> function that is executed when the path is accessed
 @app.get("/")
 # 2. The Path Operation Function
 def root():
@@ -106,7 +77,7 @@ def update_post(id: int, post: schemas.PostUpdate):
 #============= ORM Notes =============
 # Object Relational Mapper (ORM) -> SQLAlchemy, Tortoise, Django ORM
 # ORMs allow us to interact with the database using Python code instead of writing raw SQL queries. They provide an abstraction layer that simplifies database operations and can help prevent SQL injection attacks.
-
+# ====================================
 @app.get("/orm")
 def test_posts(db: Session = Depends(get_db)):
     return {"status": "success"}
