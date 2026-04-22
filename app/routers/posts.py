@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 import models, schemas, Oauth2
@@ -12,7 +12,7 @@ router = APIRouter(
 
 # get all posts
 @router.get("/", status_code=status.HTTP_200_OK, response_model=List[schemas.PostResponse])
-def get_all_posts(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user), limit: int = 10):
+def get_all_posts(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user), limit: int = 10, skip: int = 0, search: Optional[str] = ""):
     
     # To get only the posts created by the currently authenticated user.
     # posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all() # type: ignore
@@ -20,8 +20,17 @@ def get_all_posts(db: Session = Depends(get_db), current_user: int = Depends(Oau
     # To get all posts regardless of the owner.
     # posts = db.query(models.Post).all()
 
+    # To get all posts.
+    # posts = db.query(models.Post).all()
+
     # To get all posts with a limit on the number of posts returned.
-    posts = db.query(models.Post).limit(limit).all()
+    # posts = db.query(models.Post).limit(limit).all()
+
+    # To get all posts with pagination (limit and skip).
+    # posts = db.query(models.Post).limit(limit).offset(skip).all()
+
+    # To get all posts with a search query.
+    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
     
     # print(posts)
     if not posts:
