@@ -39,3 +39,16 @@ pip install SQLAlchemy
 
 # install password hashing library
 pip install "pwdlib[argon2]"
+
+# install database migration library
+pip install alembic
+alembic init alembic
+alembic --help
+alembic revision -m "create posts table"
+alembic upgrade 'revisionID'
+alembic downgrade 'revisionID' -> traceback
+alembic current -> current revision/brunch
+alembic heads -> new revision/brunch
+alembic upgrade head -> upgrade to latest revision/brunch
+alembic history
+alembic revision --autogenerate -m "auto-gen-tables"

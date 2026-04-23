@@ -7,7 +7,7 @@ import models, schemas
 from database import engine, get_db, cursor, conn
 
 # Create the tables in the database based on the models defined in models.py
-models.Base.metadata.create_all(bind=engine) 
+# models.Base.metadata.create_all(bind=engine) 
 
 app = FastAPI()
 
