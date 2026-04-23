@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     # App Specific Settings
     USER_TABLE_NAME: str
     TABLE_NAME: str
+    VOTE_TABLE_NAME: str
     
     # Auth Settings
     SECRET_KEY: str

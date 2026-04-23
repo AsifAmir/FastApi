@@ -43,6 +43,13 @@ class PostResponse(PostBase):
     class Config:
         from_attributes = True
 
+class PostOut(BaseModel):
+    Post: PostResponse
+    votes: int
+
+    class Config:
+        from_attributes = True
+
 
 # Token models for authentication
 class Token(BaseModel):
@@ -51,3 +58,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: Optional[int] = None
+
+class Vote(BaseModel):
+    post_id: int
+    dir: int # 1 for upvote, 0 for removing vote

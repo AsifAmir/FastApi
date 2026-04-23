@@ -1,6 +1,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
+from sqlmodel import func
 import models, schemas, Oauth2
 from database import get_db
 
@@ -11,7 +12,7 @@ router = APIRouter(
 
 
 # get all posts
-@router.get("/", status_code=status.HTTP_200_OK, response_model=List[schemas.PostResponse])
+@router.get("/", status_code=status.HTTP_200_OK, response_model=List[schemas.PostOut])
 def get_all_posts(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user), limit: int = 10, skip: int = 0, search: Optional[str] = ""):
     
     # To get only the posts created by the currently authenticated user.
@@ -30,13 +31,17 @@ def get_all_posts(db: Session = Depends(get_db), current_user: int = Depends(Oau
     # posts = db.query(models.Post).limit(limit).offset(skip).all()
 
     # To get all posts with a search query.
-    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    # posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
     
+    # To get all posts with the number of votes for each post, using a left outer join to include posts with zero votes, and grouping by post ID to aggregate the votes.
+    posts = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+
     # print(posts)
     if not posts:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No posts found")
     #return {"data": posts}
     return posts # FastAPI will automatically convert the SQLAlchemy models to JSON serializable format
+
 
 # create new post
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
@@ -53,10 +58,15 @@ def create_new_posts(post: schemas.PostCreate, db: Session = Depends(get_db), cu
     return new_post
 
 # get post by id
-@router.get("/{id}", status_code=status.HTTP_200_OK, response_model=schemas.PostResponse)
+@router.get("/{id}", status_code=status.HTTP_200_OK, response_model=schemas.PostOut)
 def get_post_by_id(id: int, db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
-    post = db.query(models.Post).filter(models.Post.id == id).first()
     
+    # To get only the post created by the currently authenticated user with the specified ID.
+    # post = db.query(models.Post).filter(models.Post.id == id).first()
+    
+    # To get only the post created by the currently authenticated user with the specified ID and the number of votes for that post.
+    post = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.id == id).first()
+
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} was not found")
     

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 # Importing the routers for the API
-from routers import posts, users, auth
+from routers import posts, users, auth, vote
 # Importing the database connection and models for SQLAlchemy
 from sqlalchemy.orm import Session
 import models, schemas
@@ -86,3 +86,4 @@ def test_posts(db: Session = Depends(get_db)):
 app.include_router(posts.router)
 app.include_router(users.router)
 app.include_router(auth.router)
+app.include_router(vote.router)
