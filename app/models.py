@@ -1,9 +1,9 @@
 from dotenv import load_dotenv
-from app.database import Base
+from database import Base
 from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy.orm import relationship
-from app.config import settings
+from config import settings
 load_dotenv()
 
 class Post(Base):

@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 # importing the settings from the config module to access environment variables
-from app.config import settings
+from config import settings
 
 # =======================================================================================================
 # Connecting to the database using psycopg2(PostgreSQL driver) for raw SQL queries (not using SQLAlchemy ORM)

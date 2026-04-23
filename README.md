@@ -23,8 +23,9 @@ A production-ready REST API for a social media platform — built with FastAPI, 
 
 ```bash
 # 1. Clone & enter project
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
+git clone https://github.com/AsifAmir/FastApi.git
+cd FastApi
+
 
 # 2. Create virtual environment
 python -m venv venv
@@ -34,9 +35,11 @@ venv\Scripts\activate           # Windows
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Create your .env file (see next section)
+# 4. Create your .env file (see example_env.txt file)
 
 # 5. Apply database migrations
+alembic init alembic
+alembic revision --autogenerate -m "Initial migration"
 alembic upgrade head
 
 # 6. Start the server
@@ -47,30 +50,6 @@ The API is now running at **http://localhost:8000**
 
 ---
 
-## Environment Variables
-
-Create a `.env` file in the project root:
-
-```env
-# ── Database ──────────────────────────────
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=your_db_name
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-
-# ── Table Names ───────────────────────────
-TABLE_NAME=orm_posts
-USER_TABLE_NAME=users
-VOTE_TABLE_NAME=votes
-
-# ── Auth (JWT) ────────────────────────────
-SECRET_KEY=your_super_secret_key_here
-ALGORITHM=HS256
-TOKEN_EXPIRE_MINUTES=30
-```
-
----
 
 ## Project Structure
 
@@ -306,6 +285,3 @@ alembic revision --autogenerate -m "description"  # Generate a new migration
 
 ---
 
-## License
-
-MIT — free to use, modify, and distribute.
