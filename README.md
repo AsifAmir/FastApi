@@ -12,6 +12,7 @@ A production-ready REST API for a social media platform — built with FastAPI, 
 - [Environment Variables](#environment-variables)
 - [Project Structure](#project-structure)
 - [API Reference](#api-reference)
+- [CORS](#cors)
 - [How It Works](#how-it-works)
 - [Database Schema](#database-schema)
 - [Migration History](#migration-history)
@@ -145,6 +146,38 @@ FASTAPI/
 ```
 - `dir: 1` — add a vote
 - `dir: 0` — remove your existing vote
+
+---
+
+## CORS
+
+Cross-Origin Resource Sharing (CORS) is configured in `main.py` using FastAPI's built-in `CORSMiddleware`.
+
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = [
+    # "https://www.google.com",  # Restrict to specific origins in production
+    "*"  # Allows all origins (development only)
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],   # GET, POST, PUT, DELETE, etc.
+    allow_headers=["*"],
+)
+```
+
+| Setting | Value | Notes |
+|---------|-------|-------|
+| `allow_origins` | `["*"]` | Allows all origins — restrict this in production |
+| `allow_credentials` | `True` | Allows cookies / auth headers in cross-origin requests |
+| `allow_methods` | `["*"]` | All HTTP methods permitted |
+| `allow_headers` | `["*"]` | All request headers permitted |
+
+> ⚠️ **Production note:** Replace `"*"` with explicit origins (e.g. `"https://yourfrontend.com"`) before deploying. Using `"*"` with `allow_credentials=True` is rejected by most browsers — set specific origins when credentials are required.
 
 ---
 
@@ -282,6 +315,6 @@ alembic revision --autogenerate -m "description"  # Generate a new migration
 | Password hashing | pwdlib (Argon2) |
 | Request validation | Pydantic v2 |
 | Config management | pydantic-settings |
+| CORS | FastAPI CORSMiddleware |
 
 ---
-
