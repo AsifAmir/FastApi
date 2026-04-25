@@ -6,10 +6,29 @@ from sqlalchemy.orm import Session
 import models, schemas
 from database import engine, get_db, cursor, conn
 
+# Importing the CORS middleware to allow cross-origin requests from the frontend application
+from fastapi.middleware.cors import CORSMiddleware
+
 # Create the tables in the database based on the models defined in models.py
 # models.Base.metadata.create_all(bind=engine) 
 
 app = FastAPI()
+
+# Define the allowed origins for CORS (Cross-Origin Resource Sharing)
+origins = [
+    # "https://www.google.com",
+    "*" # Allows all origins
+]
+# Add the CORS middleware to the FastAPI application with the specified settings to allow cross-origin requests from the defined origins.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    # allow_methods=["*"] allows all HTTP methods (GET, POST, PUT, DELETE, etc.) to be used in cross-origin requests.
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # ============= psycopg2 =============
 # Raw sQL queries using psycopg2 adapter for PostgreSQL database connection.
